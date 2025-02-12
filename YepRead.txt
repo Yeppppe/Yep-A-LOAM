@@ -1,0 +1,82 @@
+CmakeLists.txt:
+    find_package()查找原理：
+        1. find_package 的基本逻辑
+        find_package 是 CMake 中用于查找外部库的命令。它的工作流程如下：
+        查找配置文件：CMake 会查找名为 PCLConfig.cmake 或 pcl-config.cmake 的配置文件。
+        加载配置文件：如果找到配置文件，CMake 会加载它，并从中获取库的路径、头文件路径、编译选项等信息。
+        设置变量：加载配置文件后，CMake 会设置一些变量（如 PCL_FOUND、PCL_INCLUDE_DIRS、PCL_LIBRARIES 等），供后续的 CMake 脚本使用。
+        2. PCL 的 CMake 配置文件
+        PCL 库在安装时会在系统的特定路径下生成一个 CMake 配置文件（通常是 PCLConfig.cmake 或 pcl-config.cmake）。这个文件包含了 PCL 库的所有信息，例如：
+        头文件路径（PCL_INCLUDE_DIRS）
+        库文件路径（PCL_LIBRARIES）
+        依赖的其他库（如 Boost、Eigen 等）
+        编译选项
+        这个配置文件通常位于以下路径之一：
+        Linux/macOS：/usr/lib/cmake/PCL/ 或 /usr/local/lib/cmake/PCL/
+        Windows：C:/Program Files/PCL/lib/cmake/PCL/
+        3. find_package 的查找路径
+        find_package 会按照以下顺序查找 PCL 的配置文件：
+        <PackageName>_DIR 环境变量：
+        如果设置了 PCL_DIR 环境变量，CMake 会优先从该路径查找 PCLConfig.cmake。
+        例如：export PCL_DIR=/path/to/pcl/cmake（Linux/macOS）或 set PCL_DIR=C:/path/to/pcl/cmake（Windows）。
+        CMake 的模块路径：
+        CMake 会在预定义的模块路径中查找 PCL 的配置文件。
+        这些路径包括：
+        /usr/lib/cmake/PCL/（Linux/macOS）
+        /usr/local/lib/cmake/PCL/（Linux/macOS）
+        C:/Program Files/PCL/lib/cmake/PCL/（Windows）
+        以及其他 CMake 默认的模块路径。
+        CMAKE_PREFIX_PATH：
+        如果通过 CMAKE_PREFIX_PATH 指定了 PCL 的安装路径，CMake 会从该路径查找。
+        例如：cmake -DCMAKE_PREFIX_PATH=/path/to/pcl ..
+        系统路径：
+        如果以上路径都没有找到，CMake 会在系统的默认路径中查找。
+
+    include_directories():
+        以这个举例：
+        include_directories(
+            include
+            ${catkin_INCLUDE_DIRS} 
+            ${PCL_INCLUDE_DIRS}
+            ${CERES_INCLUDE_DIRS}
+            ${OpenCV_INCLUDE_DIRS})
+        上面的include是相对于CmakeList.txt的相对路径
+        ${PCL_INCLUDE_DIRS}等是一个或多个绝对路径，他指向安装了PCL库的头文件目录。类似${PCL_INCLUDE_DIRS}是由find_package命令产生的，其他的关于查找Ceres和Opencv的都是这个原理
+
+
+    catkin_package():
+        举个栗子：
+        catkin_package(
+            CATKIN_DEPENDS geometry_msgs nav_msgs roscpp rospy std_msgs
+            DEPENDS EIGEN3 PCL 
+            INCLUDE_DIRS include
+        )
+        用于定义一个catkin包及其依赖关系，包括依赖项和包含目录
+        CATKIN_DEPENDS geometry_msgs nav_msgs roscpp rospy std_msgs：指定此catkin包所依赖的catkin包
+        DEPENDS EIGEN3 PCL：指定此功能包所依赖的非catkin包
+        INCLUDE_DIRS include：告诉Catkin哪些目录应该被包含到此包的导出路径中。对于其他依赖此包的项目，他们会将这些目录添加到其编译器的头文件搜索路径中。
+        同时，这个命令会在生成的 package.xml 中添加依赖项，以及在生成的 CMake 配置文件中导出相关的包含目录和库信息，使得下游项目可以方便地使用本包的资源。
+
+    add_executable(ascanRegistration src/scanRegistration.cpp)
+    target_link_libraries(ascanRegistration ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+        add_executable：将src路径下的scanRegistration.cpp编译生成一个可执行文件
+        target_link_libraries：说明了该可执行文件所需要链接的库，其中就包括catkin内部库以及PCL_LIBRARIES库
+
+
+
+scanRegistration：
+    pcl::PointCloud模板类
+        pcl::PointCloud<PointType>:
+        PointType包括：  pcl::PointXYZ：包含 x, y, z 坐标的基本点类型。
+                        pcl::PointXYZI：包含 x, y, z 坐标和强度（intensity）的点类型。
+                        pcl::PointXYZRGB：包含 x, y, z 坐标和 RGB 颜色信息的点类型。
+                        pcl::PointNormal：包含 x, y, z 坐标和法线信息的点类型。
+                        pcl::PointXYZRGBA：包含 x, y, z 坐标和 RGBA 颜色信息的点类型。
+        在scanRegistration.cpp中PointType使用的是pcl::PointXYZI
+                                                Point.x,Point.y,Point.z分别表示点的坐标，Point.intensity，用点的线数和当前点的偏航角占比来共同决定的，理论上来说，整数部分就是scan_id,小数部分就是百分比
+
+
+        pcl::fromROSMsg(*laserCloudMsg, laserCloudIn): 把*laserCloudMsg这个指针指向的ROS类型的点云 转化为PCL类型的点云存储在laserCloudIn中
+
+        pcl::toROSMsg(*laserCloud, laserCloudOutMsg):  把*laserCloud这个指针指向的PCL类型的点云,转化为ROS类型的点云数据
+
