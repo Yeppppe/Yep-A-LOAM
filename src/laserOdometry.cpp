@@ -97,6 +97,7 @@ Eigen::Vector3d t_w_curr(0, 0, 0);
 double para_q[4] = {0, 0, 0, 1};
 double para_t[3] = {0, 0, 0};
 
+//* Eigen::Map 是 Eigen 库中的一个重要类，它允许将原始内存数据直接映射为 Eigen 矩阵或向量，而不需要进行数据拷贝。这是一种非常高效的内存共享机制。
 Eigen::Map<Eigen::Quaterniond> q_last_curr(para_q);
 Eigen::Map<Eigen::Vector3d> t_last_curr(para_t);
 
