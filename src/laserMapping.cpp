@@ -315,6 +315,8 @@ void process()
 
 			TicToc t_shift;
 			//* 每一个小立方体的边长是50米，空间中共有21*21*11个立方体 int是向0进行取整
+			//*  第一次运行时的t_w_curr是0，0，0 所以一开始位于大立方体的正中心 即 10，10，5
+			//*  后续随着位移的改变，机器人会变换到大立方体的不同的小立方体当中
 			int centerCubeI = int((t_w_curr.x() + 25.0) / 50.0) + laserCloudCenWidth;
 			int centerCubeJ = int((t_w_curr.y() + 25.0) / 50.0) + laserCloudCenHeight;
 			int centerCubeK = int((t_w_curr.z() + 25.0) / 50.0) + laserCloudCenDepth;
