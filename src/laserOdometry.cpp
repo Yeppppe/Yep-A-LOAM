@@ -409,7 +409,7 @@ int main(int argc, char **argv)
                             else
                                 s = 1.0;
                             ceres::CostFunction *cost_function = LidarEdgeFactor::Create(curr_point, last_point_a, last_point_b, s);
-                            problem.AddResidualBlock(cost_function, loss_function, para_q, para_t);
+                            problem.AddResidualBlock(cost_function, loss_function, para_q, para_q);
                             corner_correspondence++;
                         }
                     }
@@ -536,6 +536,8 @@ int main(int argc, char **argv)
                 }
                 printf("optimization twice time %f \n", t_opt.toc());
 
+                //! 这个地方感觉是这么个意思，但下标来看还是有点说不通。。。
+                //? 我们假设现在是第二帧数据，那最开始t为0 q可以认为是单四元数，即上一帧的坐标系与世界坐标系重合，即可以认为是q_w_last和t_w_last   后续不断乘以 q_last_curr,可以不断消除下标last，即不断得到里程计位置
                 t_w_curr = t_w_curr + q_w_curr * t_last_curr;
                 q_w_curr = q_w_curr * q_last_curr;
             }
